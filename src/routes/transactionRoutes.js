@@ -2,7 +2,8 @@ const express = require("express");
 
 const {
     createTransaction,
-    getTransaction
+    getTransaction,
+    processTransaction
 } = require("../controllers/transactionController");
 
 const authenticateMerchant = require("../middlewares/auth");
@@ -21,6 +22,13 @@ router.get(
     "/:transactionId",
     authenticateMerchant,
     getTransaction
+);
+
+// Process transaction
+router.post(
+    "/:transactionId/process",
+    authenticateMerchant,
+    processTransaction
 );
 
 module.exports = router;

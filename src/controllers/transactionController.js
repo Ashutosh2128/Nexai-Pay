@@ -2,6 +2,8 @@ const crypto = require("crypto");
 
 const Transaction = require("../models/Transaction");
 
+const { processPayment } = require("../services/paymentService");
+
 const createTransaction = async (req, res) => {
     try {
         const {
@@ -112,7 +114,58 @@ const getTransaction = async (req, res) => {
     }
 };
 
+const processTransaction = async (req, res) => {
+    try {
+        const { transactionId } = req.params;
+
+        const transaction = await processPayment(
+            transactionId,
+            req.merchant._id
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Transaction processed successfully",
+            data: {
+                transactionId: transaction.transactionId,
+                merchantId: transaction.merchant,
+                amount: transaction.amount,
+                currency: transaction.currency,
+                status: transaction.status,
+                updatedAt: transaction.updatedAt
+            }
+        });
+
+    } catch (error) {
+        console.error("Process transaction error:", error);
+
+        if (error.message === "Transaction not found") {
+            return res.status(404).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        if (
+            error.message.startsWith(
+                "Transaction cannot be processed"
+            )
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+};
+
 module.exports = {
     createTransaction,
-    getTransaction
+    getTransaction,
+    processTransaction
 };
